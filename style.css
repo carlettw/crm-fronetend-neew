@@ -40,3 +40,14 @@ table{width:100%;border-collapse:collapse}th{text-align:left;font-size:12px;colo
 aside .brand{display:none}aside a{flex:none;flex-direction:column;font-size:11px;padding:6px 10px}main{padding:14px 12px 90px}}
 
 .ferr{color:var(--er);font-size:13px;font-weight:600;margin-top:8px}.ferr:empty{display:none}
+
+.tl{position:relative;margin:12px 0 4px 8px;padding-left:20px;border-left:2px dashed var(--br)}
+.tp{position:relative;padding:3px 0 12px;animation:up .45s both}
+.tp i{position:absolute;left:-29px;top:8px;width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--p2));box-shadow:0 0 0 4px var(--card)}
+.tt{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tm{background:var(--bg);color:var(--p);font-weight:800;border-radius:8px;padding:1px 9px;font-size:13px;border:1px solid var(--br)}
+.ts{margin-top:2px}.map{font-size:13px;color:var(--p);text-decoration:none;font-weight:600}.map:hover{text-decoration:underline}
+.lbl{margin:12px 0 6px;font-size:13px;color:var(--mut);font-weight:600}.stops .srow{animation:pop .3s}
+.srow{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px;padding:8px;border:1px dashed var(--br);border-radius:12px}
+.srow input{width:auto;padding:8px 10px;flex:1 1 140px}.srow input[type=time]{flex:0 0 108px}.srow input[type=number]{flex:0 0 96px}
+.sn{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border-radius:50%;width:24px;height:24px;display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}.rm{cursor:pointer;color:var(--er);padding:0 6px}
+.modal .box{max-width:560px}
