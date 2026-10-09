@@ -2,17 +2,21 @@ const API=(window.CONFIG&&CONFIG.API)||'/api/v1',$=s=>document.querySelector(s),
 esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
 dt=s=>s?new Date(/Z|\+/.test(s)?s:s+'Z').toLocaleString('uz',{dateStyle:'short',timeStyle:'short'}):'—';
 let tok=localStorage.tok,me,boss=localStorage.boss,view;
+const FN={rate:'kurs',amount:'summa',value:'qiymat',level:'daraja',phone:'telefon',username:'username',full_name:'ism',password:'parol',boss_percent:'foiz',guide_level:'daraja',car_model:'mashina',title:'tur nomi',start_at:'vaqt',tourist_name:'turist',total_price:'narx',stars:'yulduz'};
+const msgOf=d=>{if(typeof d.detail=='string')return d.detail;if(Array.isArray(d.detail))return d.detail.map(e=>{const f=(e.loc||[]).filter(x=>x!='body').pop(),t=e.type||'';
+ const m=t=='missing'?'to‘ldirilmagan':/^(greater|less)/.test(t)?'qiymat noto‘g‘ri (chegaradan tashqarida)':/type|parsing|string_too/.test(t)?'noto‘g‘ri yoki bo‘sh':(e.msg||'').replace('Value error, ','');return (f?(FN[f]||f)+': ':'')+m}).join('; ');return 'Ma’lumotlarni tekshiring'};
 async function api(p,m='GET',b){const r=await fetch(API+p,{method:m,headers:{'Content-Type':'application/json',...(tok?{Authorization:'Bearer '+tok}:{})},body:b?JSON.stringify(b):undefined}).catch(()=>{throw Error('Serverga ulanib bo‘lmadi. Server uyg‘onayotgan bo‘lishi mumkin — 1 daqiqadan keyin qayta urinib ko‘ring')});
  if(r.status==204)return{};const d=await r.json().catch(()=>({}));
  if(r.status==401&&tok&&p!='/auth/login'){logout();throw Error('Qayta kiring')}
- if(!r.ok)throw Error(typeof d.detail=='string'?d.detail:'Ma’lumotlarni tekshiring');return d}
+ if(!r.ok)throw Error(msgOf(d));return d}
 const Q=p=>me.role=='admin'?p+(p.includes('?')?'&':'?')+'boss_id='+boss:p;
 function toast(t,ok=1){const e=document.createElement('div');e.className='toast'+(ok?'':' er');e.textContent=t;$('#toasts').append(e);setTimeout(()=>e.remove(),3500)}
 const go=f=>async(...a)=>{try{await f(...a)}catch(e){toast(e.message,0)}};
 function modal(h){const d=document.createElement('div');d.className='modal';d.innerHTML=`<div class=box>${h}</div>`;d.onclick=e=>e.target==d&&d.remove();document.body.append(d);return d}
-function form(title,fields,submit){const m=modal(`<form><h3>${title}</h3>${fields.map(([n,l,t,o])=>`<label>${l}${t=='select'?`<select name=${n}>${o.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select>`:t=='area'?`<textarea name=${n}>${esc(o||'')}</textarea>`:`<input name=${n} type="${t||'text'}" value="${esc(o||'')}">`}</label>`).join('')}<div class=row><button type=button class=ghost>Bekor</button><button>Saqlash</button></div></form>`);
+function form(title,fields,submit){const m=modal(`<form><h3>${title}</h3>${fields.map(([n,l,t,o])=>`<label>${l}${t=='select'?`<select name=${n}>${o.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select>`:t=='area'?`<textarea name=${n}>${esc(o||'')}</textarea>`:`<input name=${n} type="${t||'text'}" value="${esc(o||'')}">`}</label>`).join('')}<div class=ferr></div><div class=row><button type=button class=ghost>Bekor</button><button>Saqlash</button></div></form>`);
  m.querySelector('.ghost').onclick=()=>m.remove();
- m.querySelector('form').onsubmit=go(async e=>{e.preventDefault();const o={};new FormData(e.target).forEach((v,k)=>{if(v!=='')o[k]=v});await submit(o);m.remove()})}
+ m.querySelector('form').onsubmit=async e=>{e.preventDefault();const o={};new FormData(e.target).forEach((v,k)=>{if(v!=='')o[k]=v});const er=m.querySelector('.ferr');er.textContent='';
+  try{await submit(o);m.remove()}catch(x){er.textContent='⚠️ '+x.message;toast(x.message,0)}}}
 const table=(h,r)=>`<div class="card tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan=${h.length} class=mut>Hozircha bo‘sh</td></tr>`}</tbody></table></div>`;
 const seg=(o,c,f)=>`<span class=seg>${o.map(([k,l])=>`<b class="${k==c?'on':''}" onclick="${f}('${k}')">${l}</b>`).join('')}</span>`;
 const chip=s=>`<span class="chip ${s}">${({draft:'Shablon',open:'Ochiq',ready:'Tayyor',completed:'Yakunlangan',cancelled:'Bekor'})[s]||s}</span>`;
@@ -45,7 +49,7 @@ V.account=async()=>{const d=await api('/me/account'),g=d.guide;html(`<div class=
 A.conf=go(async id=>{await api(`/payments/${id}/confirm`,'POST');toast('Tasdiqlandi ✓');show('account')});
 // ---------- super admin ----------
 V.users=async()=>{html(`<div class=bar><input id=sq placeholder="🔍 Ism, telefon yoki username"><select id=rf><option value="">Hammasi</option>${['admin','boss','guide','driver'].map(r=>`<option value=${r}>${ROLE[r]}</option>`)}</select><button onclick="A.newUser()">＋ Yangi</button></div><div id=ut></div>`);
- let t;const ld=go(async()=>{const d=await api(`/users?limit=100&search=${encodeURIComponent($('#sq').value)}&role=${$('#rf').value}`);
+ let t;const ld=go(async()=>{const d=await api(`/users?limit=100&search=${encodeURIComponent($('#sq').value)}${$('#rf').value?'&role='+$('#rf').value:''}`);
  $('#ut').innerHTML=table(['Ism','Telefon','Username','Rol','',''],d.items.map(u=>[esc(u.full_name),u.phone,'@'+u.username,ROLE[u.role]+(u.guide_level?' · '+u.guide_level+'-d':'')+(u.boss_percent!=null?' · '+u.boss_percent+'%':'')+(u.car_model?' · '+esc(u.car_model):''),
  u.is_active?'<span class="chip ready">faol</span>':'<span class="chip cancelled">o‘chiq</span>',`<button class="sm ghost" onclick="A.act(${u.id},${!u.is_active})">${u.is_active?'O‘chirish':'Yoqish'}</button> ${u.role=='guide'?`<button class="sm ghost" onclick="A.lvl(${u.id})">Daraja</button> <button class="sm ghost" onclick="A.intv(${u.id})">Suhbat ✓</button>`:''}`]))});
  $('#sq').oninput=()=>{clearTimeout(t);t=setTimeout(ld,300)};$('#rf').onchange=ld;A.reload=ld;ld()};

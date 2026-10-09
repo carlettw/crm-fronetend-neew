@@ -11,4 +11,3 @@ Oddiy HTML/CSS/JS, build kerak emas.
 
 Boshqa variantlar: Vercel, Cloudflare Pages, GitHub Pages yoki `docker build -t web . && docker run -p 3000:80 web`.
 Render bepul tarifida server 15 daqiqa so'rovsiz uxlaydi, birinchi kirish 30-60 soniya kutishi mumkin.
-"# crm-fronetend-neew" 
