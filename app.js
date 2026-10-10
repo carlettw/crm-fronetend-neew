@@ -35,7 +35,7 @@ const chip=s=>`<span class="chip ${s}">${({draft:'Shablon',open:'Ochiq',ready:'T
 const html=h=>{const m=$('#main');if(m)m.innerHTML=h};const load=()=>html('<div class=spin></div>');
 const ROLE={super_admin:'Super admin',boss:'Boshliq',admin:'Admin',guide:'Gid',driver:'Haydovchi'};
 const NAV={super_admin:[['users','👥','Foydalanuvchilar'],['settings','⚙️','Sozlamalar']],boss:[['stats','📊','Analitika'],['pay','💸','To‘lovlar'],['admins','🧑‍💼','Adminlar']],
- admin:[['tours','🗺️','Turlar'],['account','💰','Hisobim']],guide:[['avail','🧭','Turlar'],['mine','📌','Turlarim'],['account','🏅','Hisobim']],driver:[['avail','🚐','Ishlar'],['mine','📌','Ishlarim'],['account','💰','Hisobim']]};
+ admin:[['tours','🗺️','Turlar'],['account','💰','Hisobim']],guide:[['avail','🧭','Turlar'],['mine','📌','Turlarim'],['level','📈','Darajam'],['account','🏅','Hisobim']],driver:[['avail','🚐','Ishlar'],['mine','📌','Ishlarim'],['account','💰','Hisobim']]};
 function logout(expired){localStorage.clear();tok=me=null;clearInterval(window.pt);boot();if(expired===true)toast('Sessiya tugadi, qayta kiring',0)}
 function loginUI(){$('#app').innerHTML=`<div class=login><form class=box id=lf><div class=logo>🧭</div><h2 style="text-align:center">Tur Boshqaruv</h2><p class=mut style="text-align:center">Hisobingizga kiring</p>
 <label>Username<input name=username placeholder="masalan: superadmin" autocapitalize=off autocomplete=username required></label><label>Parol<input name=password type=password required></label><button style="width:100%;margin-top:8px">Kirish</button></form></div>`;
@@ -57,6 +57,15 @@ V.inbox=async()=>{const d=await api('/messages?limit=100');html(`<div class=bar>
 A.read=go(async(id,el)=>{await api(`/messages/${id}/read`,'POST');el.classList.remove('new');poll()});
 A.send=()=>form('Xabar yozish',[['username','Username (masalan: admin1)'],['body','Matn','area']],async o=>{await api('/messages','POST',o);toast('Yuborildi ✓')});
 A.pw=()=>form('Parolni almashtirish',[['old_password','Eski parol','password'],['new_password','Yangi parol','password']],async o=>{await api('/auth/change-password','POST',o);toast('Parol yangilandi ✓')});
+V.level=async()=>{const d=await api('/me/level-info'),n=d.next,pct=n&&n.need?Math.min(100,Math.round(n.done/n.need*100)):100,money=r=>r?fmt(r)+' so‘m':'Tekin';
+ const nextTxt=!n?'🏆 Siz eng yuqori darajadasiz':n.kind=='checklist'?`${n.level}-darajaga o‘tish uchun ikkita shart: <br>${n.practice_done?'✅':'⬜'} yordamchi sifatida 1 ta tur &nbsp; ${n.interview_passed?'✅':'⬜'} suhbatdan o‘tish`:n.kind=='tours'?`${n.level}-darajaga yana <b>${Math.max(0,n.need-n.done)} ta tur</b> qoldi (${n.done} / ${n.need})`:`${n.level}-darajaga o‘tkazishni super admin hal qiladi`;
+ html(`<div class=grid><div class=card><div class=mut>Hozirgi daraja</div><div class=stat>${d.level}-daraja</div><div class=mut>${esc(d.title)}</div></div>
+ <div class=card><div class=mut>Daraja summasi (1 tur uchun)</div><div class=stat>${d.level>2&&d.rate==null?'—':money(d.rate)}</div><div class=mut>${d.level<=2?'Bu darajada haq to‘lanmaydi':d.rate==null?'Super admin hali belgilamagan':'Admin bundan kam taklif qila olmaydi, turga qarab ko‘proq taklif qilishi mumkin'}</div></div>
+ <div class=card><div class=mut>Bajarilgan turlar</div><div class=stat>${d.completed_tours}</div><div class=mut>shu darajada: ${d.level_tours}</div></div></div>
+ <div class=card><b>Keyingi daraja</b><div class=pb style="margin:10px 0"><i data-w="${pct}"></i></div><div>${nextTxt}</div></div>
+ <div class=card><b>${d.level}-daraja haqida</b><p style="margin:6px 0 0">${esc(d.info)}</p></div>
+ <h3>Barcha darajalar</h3><div class=lv>${d.levels.map((l,i)=>`<div class="lr ${l.state=='done'?'done':l.state=='current'?'cur':'lock'}" style="animation-delay:${i*.06}s"><span class=n>${l.state=='done'?'✓':l.level}</span><div><b>${l.level}-daraja · ${esc(l.title)}</b><div class=mut>${esc(l.info)}</div></div><span class=rt>${l.level<=2?'Tekin':l.rate?fmt(l.rate)+' so‘m':'—'}</span></div>`).join('')}</div>`);
+ setTimeout(()=>document.querySelectorAll('.pb i').forEach(i=>i.style.width=i.dataset.w+'%'),60)};
 V.account=async()=>{const d=await api('/me/account'),g=d.guide;html(`<div class=grid><div class=card><div class=mut>Olinadigan summa</div><div class=stat>${fmt(d.to_receive)} so‘m</div><div class=mut>jarima: ${fmt(d.unpaid_fines)}</div></div>
  ${d.rating?`<div class=card><div class=mut>Reyting</div><div class=stat>⭐ ${d.rating}</div></div>`:''}
  ${g?`<div class=card><div class=mut>Daraja</div><div class=stat>${g.level}-daraja</div><div class=mut>Shu darajada: ${g.level_tours} tur · jami ${g.completed_tours}${g.level==1?`<br>Amaliyot: ${g.practice_done?'✅':'⬜'} · Suhbat: ${g.interview_passed?'✅':'⬜'}`:''}<br>🌐 ${(g.languages||[]).map(lang).join(', ')||'—'} · <a class=map style="cursor:pointer" onclick="A.myLangs()">o‘zgartirish</a></div></div>`:''}</div><h3>To‘lovlar</h3>`+
