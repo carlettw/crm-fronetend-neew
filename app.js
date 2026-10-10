@@ -6,9 +6,12 @@ let tok=localStorage.tok,me,boss=localStorage.boss,view;
 const FN={rate:'kurs',amount:'summa',value:'qiymat',level:'daraja',phone:'telefon',username:'username',full_name:'ism',password:'parol',boss_percent:'foiz',guide_level:'daraja',car_model:'mashina',title:'tur nomi',languages:'tillar',language:'til',start_at:'vaqt',tourist_name:'turist',total_price:'narx',stars:'yulduz'};
 const msgOf=d=>{if(typeof d.detail=='string')return d.detail;if(Array.isArray(d.detail))return d.detail.map(e=>{const f=(e.loc||[]).filter(x=>x!='body').pop(),t=e.type||'';
  const m=t=='missing'?'to‘ldirilmagan':/^(greater|less)/.test(t)?'qiymat noto‘g‘ri (chegaradan tashqarida)':/type|parsing|string_too/.test(t)?'noto‘g‘ri yoki bo‘sh':(e.msg||'').replace('Value error, ','');return (f?(FN[f]||f)+': ':'')+m}).join('; ');return 'Ma’lumotlarni tekshiring'};
-async function api(p,m='GET',b){const r=await fetch(API+p,{method:m,headers:{'Content-Type':'application/json',...(tok?{Authorization:'Bearer '+tok}:{})},body:b?JSON.stringify(b):undefined}).catch(()=>{throw Error('Serverga ulanib bo‘lmadi ('+API.replace('/api/v1','')+'). Backend ishlayotganini tekshiring yoki 1 daqiqadan keyin qayta urinib ko‘ring')});
+const raw=(p,m,b)=>fetch(API+p,{method:m,headers:{'Content-Type':'application/json',...(tok?{Authorization:'Bearer '+tok}:{})},body:b?JSON.stringify(b):undefined}).catch(()=>{throw Error('Serverga ulanib bo‘lmadi ('+API.replace('/api/v1','')+'). Backend ishlayotganini tekshiring yoki 1 daqiqadan keyin qayta urinib ko‘ring')});
+let rfs;const refreshTok=()=>{const rt=localStorage.rt;if(!rt)return Promise.resolve(false);
+ return rfs=rfs||fetch(API+'/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:rt})}).then(async r=>{if(!r.ok)return false;const t=await r.json();tok=localStorage.tok=t.access_token;localStorage.rt=t.refresh_token;return true}).catch(()=>false).finally(()=>{rfs=null})};
+async function api(p,m='GET',b){let r=await raw(p,m,b);
+ if(r.status==401&&p!='/auth/login'&&p!='/auth/refresh'){if(await refreshTok())r=await raw(p,m,b);if(r.status==401){logout(true);throw Error('Sessiya tugadi. Qayta kiring')}}
  if(r.status==204)return{};const d=await r.json().catch(()=>({}));
- if(r.status==401&&tok&&p!='/auth/login'){logout();throw Error('Qayta kiring')}
  if(!r.ok)throw Error(msgOf(d));return d}
 const Q=p=>me.role=='admin'?p+(p.includes('?')?'&':'?')+'boss_id='+boss:p;
 function toast(t,ok=1){const e=document.createElement('div');e.className='toast'+(ok?'':' er');e.textContent=t;$('#toasts').append(e);setTimeout(()=>e.remove(),3500)}
@@ -29,21 +32,21 @@ function form(title,fields,submit){const m=modal(`<form><h3>${title}</h3>${field
 const table=(h,r)=>`<div class="card tw"><table><thead><tr>${h.map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${r.map(x=>`<tr>${x.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')||`<tr><td colspan=${h.length} class=mut>Hozircha bo‘sh</td></tr>`}</tbody></table></div>`;
 const seg=(o,c,f)=>`<span class=seg>${o.map(([k,l])=>`<b class="${k==c?'on':''}" onclick="${f}('${k}')">${l}</b>`).join('')}</span>`;
 const chip=s=>`<span class="chip ${s}">${({draft:'Shablon',open:'Ochiq',ready:'Tayyor',completed:'Yakunlangan',cancelled:'Bekor'})[s]||s}</span>`;
-const html=h=>{$('#main').innerHTML=h};const load=()=>html('<div class=spin></div>');
+const html=h=>{const m=$('#main');if(m)m.innerHTML=h};const load=()=>html('<div class=spin></div>');
 const ROLE={super_admin:'Super admin',boss:'Boshliq',admin:'Admin',guide:'Gid',driver:'Haydovchi'};
 const NAV={super_admin:[['users','👥','Foydalanuvchilar'],['settings','⚙️','Sozlamalar']],boss:[['stats','📊','Analitika'],['pay','💸','To‘lovlar'],['admins','🧑‍💼','Adminlar']],
  admin:[['tours','🗺️','Turlar'],['account','💰','Hisobim']],guide:[['avail','🧭','Turlar'],['mine','📌','Turlarim'],['account','🏅','Hisobim']],driver:[['avail','🚐','Ishlar'],['mine','📌','Ishlarim'],['account','💰','Hisobim']]};
-function logout(){localStorage.clear();tok=me=null;boot()}
+function logout(expired){localStorage.clear();tok=me=null;clearInterval(window.pt);boot();if(expired===true)toast('Sessiya tugadi, qayta kiring',0)}
 function loginUI(){$('#app').innerHTML=`<div class=login><form class=box id=lf><div class=logo>🧭</div><h2 style="text-align:center">Tur Boshqaruv</h2><p class=mut style="text-align:center">Hisobingizga kiring</p>
 <label>Username<input name=username placeholder="masalan: superadmin" autocapitalize=off autocomplete=username required></label><label>Parol<input name=password type=password required></label><button style="width:100%;margin-top:8px">Kirish</button></form></div>`;
- $('#lf').onsubmit=go(async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));const t=await api('/auth/login','POST',f);tok=localStorage.tok=t.access_token;boot()})}
+ $('#lf').onsubmit=go(async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));const t=await api('/auth/login','POST',f);tok=localStorage.tok=t.access_token;localStorage.rt=t.refresh_token;boot()})}
 async function boot(){if(!tok)return loginUI();try{me=await api('/users/me')}catch{return loginUI()}
  const nav=[...NAV[me.role]||[],['inbox','✉️','Xabarlar']];
  $('#app').innerHTML=`<div class=shell><aside><div class=brand>🧭 Tur Boshqaruv</div>${nav.map(([k,i,l])=>`<a data-v=${k} onclick="show('${k}')">${i} ${l}${k=='inbox'?'<span id=bd></span>':''}</a>`).join('')}
  <a onclick="A.pw()">🔑 Parol</a><a onclick="logout()">🚪 Chiqish</a></aside><div><main><div class=top><div><h2 id=ttl></h2><div class=who>${esc(me.full_name)} · ${ROLE[me.role]}${me.guide_level?' · '+me.guide_level+'-daraja':''}</div></div></div><div id=main></div></main></div></div>`;
  show(nav[0][0]);poll();clearInterval(window.pt);window.pt=setInterval(poll,30000)}
 async function poll(){try{const d=await api('/messages?unread_only=true&limit=1');$('#bd').innerHTML=d.unread?`<span class=badge>${d.unread}</span>`:''}catch{}}
-async function show(v,...a){view=v;document.querySelectorAll('aside a').forEach(x=>x.classList.toggle('on',x.dataset.v==v));
+async function show(v,...a){if(!$('#main'))return;view=v;document.querySelectorAll('aside a').forEach(x=>x.classList.toggle('on',x.dataset.v==v));
  $('#ttl').textContent=(document.querySelector(`aside a[data-v=${v}]`)?.textContent||'').trim();load();try{await V[v](...a)}catch(e){html(`<div class=card>⚠️ ${esc(e.message)}</div>`)}}
 const mapLink=u=>/^https?:\/\//i.test(u||'')?`<a class=map href="${esc(u)}" target=_blank rel=noopener>📍 Xaritada ochish</a>`:'';
 const loc=a=>/^https?:\/\//i.test(a||'')?mapLink(a):esc(a||'');
