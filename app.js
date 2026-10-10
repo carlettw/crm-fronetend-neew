@@ -1,7 +1,7 @@
 const API=(window.CONFIG&&CONFIG.API)||'/api/v1',$=s=>document.querySelector(s),fmt=n=>Number(n||0).toLocaleString('uz'),
 esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
 dt=s=>s?new Date(/Z|\+/.test(s)?s:s+'Z').toLocaleString('uz',{dateStyle:'short',timeStyle:'short'}):'—';
-const LANGS={uz:'O‘zbek',ru:'Rus',en:'Ingliz',de:'Nemis',fr:'Frantsuz',es:'Ispan',it:'Italyan',pt:'Portugal',zh:'Xitoy',ja:'Yapon',ko:'Koreys',tr:'Turk',ar:'Arab',fa:'Fors',hi:'Hind',kk:'Qozoq'},lang=c=>LANGS[c]||c;
+const LANGS={uz:'O‘zbek',ru:'Rus',en:'Ingliz',de:'Nemis',fr:'Frantsuz',es:'Ispan',it:'Italyan',pt:'Portugal',zh:'Xitoy',ja:'Yapon',ko:'Koreys',tr:'Turk',ar:'Arab',fa:'Fors',hi:'Hind',kk:'Qozoq',tg:'Tojik'},lang=c=>LANGS[c]||c;
 let tok=localStorage.tok,me,boss=localStorage.boss,view;
 const FN={rate:'kurs',amount:'summa',value:'qiymat',level:'daraja',phone:'telefon',username:'username',full_name:'ism',password:'parol',boss_percent:'foiz',guide_level:'daraja',car_model:'mashina',title:'tur nomi',languages:'tillar',language:'til',start_at:'vaqt',tourist_name:'turist',total_price:'narx',stars:'yulduz'};
 const msgOf=d=>{if(typeof d.detail=='string')return d.detail;if(Array.isArray(d.detail))return d.detail.map(e=>{const f=(e.loc||[]).filter(x=>x!='body').pop(),t=e.type||'';
