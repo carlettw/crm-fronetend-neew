@@ -60,3 +60,9 @@ aside .brand{display:none}aside a{flex:none;flex-direction:column;font-size:11px
 .lr.cur{border-color:var(--p);box-shadow:0 8px 22px rgba(79,70,229,.18)}.lr.cur .n{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;animation:pulse 2s infinite}.lr.lock{opacity:.72}.lr .rt{margin-left:auto;font-weight:800;white-space:nowrap;padding-left:8px}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,70,229,.5)}70%{box-shadow:0 0 0 12px rgba(79,70,229,0)}100%{box-shadow:0 0 0 0 rgba(79,70,229,0)}}
 .cred{background:var(--bg);border:1.5px dashed var(--p);border-radius:12px;padding:12px;user-select:all;font-family:ui-monospace,Consolas,monospace;font-size:14px;line-height:1.6}
+.tg{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.tg .mut{flex:1 1 200px}.tg.ok{border-color:var(--ok)}
+.chip.urg{background:#fee2e2;color:#b91c1c;animation:pulse 2s infinite}
+.srow select{width:auto;flex:0 0 130px;padding:8px 10px}.modal .box.wide{max-width:780px}
+.det h4{margin:18px 0 8px;font-size:15px}.det h3{margin:8px 0}.gr{padding:10px 12px;border:1px solid var(--br);border-radius:12px;margin-bottom:8px;display:grid;gap:4px}
+.card.pend{border-color:var(--wa);box-shadow:0 8px 22px rgba(245,158,11,.2)}.chip.awaiting_approval{background:#fef3c7;color:#b45309}
+.regs{display:flex;flex-wrap:wrap;gap:6px}
